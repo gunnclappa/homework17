@@ -1,5 +1,6 @@
 package reqres.tests;
 
+import io.restassured.http.ContentType;
 import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,10 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ReqresTests {
 
-    private static final int STATUSCODE200 = 200;
-    private static final int STATUSCODE404 = 404;
-    private static final int STATUSCODE204 = 204;
-    private static final String CONTENTTYPEJSON = "application/json";
+    private static final int STATUS_CODE_200 = 200;
+    private static final int STATUS_CODE_404 = 404;
+    private static final int STATUS_CODE_204 = 204;
 
     @Test
     @DisplayName("Тест на успешную регистрацию")
@@ -31,14 +31,14 @@ public class ReqresTests {
 
         String actualBody = given()
                 .log().uri()
-                .contentType(CONTENTTYPEJSON)
+                .contentType(ContentType.JSON)
                 .body(requestParams.toString())
                 .when()
                 .post(uri)
                 .then()
                 .log().status()
                 .log().body()
-                .statusCode(STATUSCODE200)
+                .statusCode(STATUS_CODE_200)
                 .extract().response().getBody().asString();
 
         assertEquals(expectedBody.toString(), actualBody);
@@ -59,7 +59,7 @@ public class ReqresTests {
                 .then()
                 .log().status()
                 .log().body()
-                .statusCode(STATUSCODE200)
+                .statusCode(STATUS_CODE_200)
                 .assertThat()
                 .body("data.first_name", is(expectedFirstName));
     }
@@ -76,7 +76,7 @@ public class ReqresTests {
                 .get(uri)
                 .then()
                 .log().status()
-                .statusCode(STATUSCODE204);
+                .statusCode(STATUS_CODE_404);
     }
 
 
@@ -92,7 +92,7 @@ public class ReqresTests {
                 .delete(uri)
                 .then()
                 .log().status()
-                .statusCode(STATUSCODE404);
+                .statusCode(STATUS_CODE_204);
     }
 
     @Test
@@ -107,14 +107,14 @@ public class ReqresTests {
         given()
                 .log().uri()
                 .log().body()
-                .contentType(CONTENTTYPEJSON)
+                .contentType(ContentType.JSON)
                 .body(requestParams.toString())
                 .when()
                 .put(uri)
                 .then()
                 .log().status()
                 .log().body()
-                .statusCode(STATUSCODE200)
+                .statusCode(STATUS_CODE_200)
                 .assertThat()
                 .body("name", is(requestParams.get("name")))
                 .body("job", is(requestParams.get("job")));

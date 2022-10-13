@@ -32,11 +32,13 @@ compileTestJava {
 
 dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter:5.9.0',
-            'com.codeborne:selenide:6.7.4',
+            'com.codeborne:selenide:6.8.1',
             'io.qameta.allure:allure-selenide:2.19.0',
-            'org.slf4j:slf4j-simple:2.0.1',
+            'org.slf4j:slf4j-simple:2.0.3',
             'io.rest-assured:rest-assured:5.2.0',
-            'org.json:json:20220924')
+            'org.json:json:20220924',
+            'org.assertj:assertj-core:3.23.1',
+            'io.qameta.allure:allure-rest-assured:2.19.0')
 }
 
 tasks.withType(Test) {

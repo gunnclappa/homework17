@@ -1,65 +1,62 @@
 package reqres.tests;
 
-import io.restassured.http.ContentType;
 import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import reqres.models.ChangeUserNamePojoModel;
+import reqres.models.LoginBodyPojoModel;
+import reqres.models.LoginResponsePojoModel;
 
 import static io.restassured.RestAssured.given;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.notNullValue;
+import static reqres.specs.LoginSpecs.loginRequestSpec;
+import static reqres.specs.LoginSpecs.loginResponseSpec;
 
 public class ReqresTests {
-
-    private static final int STATUS_CODE_200 = 200;
-    private static final int STATUS_CODE_404 = 404;
-    private static final int STATUS_CODE_204 = 204;
 
     @Test
     @DisplayName("Тест на успешную регистрацию")
     void registerSuccessfulTest() {
 
-        final String uri = "https://reqres.in/api/register";
-
-        JSONObject requestParams = new JSONObject();
-        requestParams.put("email", "eve.holt@reqres.in");
-        requestParams.put("password", "pistol");
+        LoginBodyPojoModel body = new LoginBodyPojoModel();
+        body.setEmail("eve.holt@reqres.in");
+        body.setPassword("pistol");
 
         JSONObject expectedBody = new JSONObject();
-        expectedBody.put("id", 4);
+        expectedBody.put("id", "4");
         expectedBody.put("token", "QpwL5tke4Pnpja7X4");
 
-        String actualBody = given()
-                .log().uri()
-                .contentType(ContentType.JSON)
-                .body(requestParams.toString())
+        LoginResponsePojoModel response = given()
+                .spec(loginRequestSpec)
+                .basePath("api/register")
+                .body(body)
                 .when()
-                .post(uri)
+                .post()
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(STATUS_CODE_200)
-                .extract().response().getBody().asString();
+                .spec(loginResponseSpec)
+                .body("token", notNullValue())
+                .extract()
+                .as(LoginResponsePojoModel.class);
 
-        assertEquals(expectedBody.toString(), actualBody);
+        assertThat(response.getId()).isEqualTo(expectedBody.get("id"));
+        assertThat(response.getToken()).isEqualTo(expectedBody.get("token"));
     }
 
     @Test
     @DisplayName("Тест на успешное получение имени юзера")
     void singleUserFirstNameTest() {
 
-        final String uri = "https://reqres.in/api/users/11";
-
         String expectedFirstName = "George";
 
         given()
-                .log().uri()
+                .spec(loginRequestSpec)
+                .basePath("api/users/11")
                 .when()
-                .get(uri)
+                .get()
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(STATUS_CODE_200)
+                .spec(loginResponseSpec)
                 .assertThat()
                 .body("data.first_name", is(expectedFirstName));
     }
@@ -68,55 +65,48 @@ public class ReqresTests {
     @DisplayName("Тест на успешное ненахождение юзера")
     void singleUserNotFoundTest() {
 
-        final String uri = "https://reqres.in/api/users/23";
-
         given()
-                .log().uri()
+                .spec(loginRequestSpec)
+                .basePath("api/users/23")
                 .when()
-                .get(uri)
+                .get()
                 .then()
                 .log().status()
-                .statusCode(STATUS_CODE_404);
+                .statusCode(404);
     }
-
 
     @Test
     @DisplayName("Тест на успешное удаление юзера")
     void deleteUserTest() {
 
-        final String uri = "https://reqres.in/api/users/2";
-
         given()
-                .log().uri()
+                .spec(loginRequestSpec)
+                .basePath("/api/users/2")
                 .when()
-                .delete(uri)
+                .delete()
                 .then()
                 .log().status()
-                .statusCode(STATUS_CODE_204);
+                .statusCode(204);
     }
 
     @Test
     @DisplayName("Тест на успешное изменение имени и работы юзера")
     void updateUserNameTest() {
-        final String uri = "https://reqres.in/api/users/12";
 
-        JSONObject requestParams = new JSONObject();
-        requestParams.put("name", "morpheus");
-        requestParams.put("job", "zion resident");
+        ChangeUserNamePojoModel body = new ChangeUserNamePojoModel();
+        body.setName("morpheus");
+        body.setJob("zion resident");
 
         given()
-                .log().uri()
-                .log().body()
-                .contentType(ContentType.JSON)
-                .body(requestParams.toString())
+                .spec(loginRequestSpec)
+                .basePath("/api/users/12")
+                .body(body)
                 .when()
-                .put(uri)
+                .put()
                 .then()
-                .log().status()
-                .log().body()
-                .statusCode(STATUS_CODE_200)
+                .spec(loginResponseSpec)
                 .assertThat()
-                .body("name", is(requestParams.get("name")))
-                .body("job", is(requestParams.get("job")));
+                .body("name", is(body.getName()))
+                .body("job", is(body.getJob()));
     }
 }

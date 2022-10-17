@@ -10,9 +10,11 @@ import static io.restassured.RestAssured.with;
 import static reqres.helpers.CustomApiListener.withCustomTemplates;
 
 public class LoginSpecs {
+
     public static RequestSpecification loginRequestSpec = with()
             .filter(withCustomTemplates())
-            .baseUri("https://reqres.in/")
+            .baseUri("https://reqres.in")
+            .basePath("/api")
             .log().uri()
             .log().body()
             .contentType(ContentType.JSON);

@@ -3,14 +3,11 @@ package reqres.tests;
 import org.json.JSONObject;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import reqres.models.ChangeUserNamePojoModel;
-import reqres.models.LoginBodyPojoModel;
-import reqres.models.LoginResponsePojoModel;
+import reqres.models.*;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import static reqres.specs.LoginSpecs.loginRequestSpec;
 import static reqres.specs.LoginSpecs.loginResponseSpec;
 
@@ -20,7 +17,7 @@ public class ReqresTests {
     @DisplayName("Тест на успешную регистрацию")
     void registerSuccessfulTest() {
 
-        LoginBodyPojoModel body = new LoginBodyPojoModel();
+        LoginBodyLombokModel body = new LoginBodyLombokModel();
         body.setEmail("eve.holt@reqres.in");
         body.setPassword("pistol");
 
@@ -28,20 +25,28 @@ public class ReqresTests {
         expectedBody.put("id", "4");
         expectedBody.put("token", "QpwL5tke4Pnpja7X4");
 
-        LoginResponsePojoModel response = given()
+        LoginResponseLombokModel response = given()
                 .spec(loginRequestSpec)
-                .basePath("api/register")
                 .body(body)
                 .when()
-                .post()
+                .post("/register")
                 .then()
                 .spec(loginResponseSpec)
                 .body("token", notNullValue())
                 .extract()
-                .as(LoginResponsePojoModel.class);
+                .as(LoginResponseLombokModel.class);
 
         assertThat(response.getId()).isEqualTo(expectedBody.get("id"));
         assertThat(response.getToken()).isEqualTo(expectedBody.get("token"));
+
+        given()
+                .spec(loginRequestSpec)
+                .when()
+                .get("/users")
+                .then()
+                .spec(loginResponseSpec)
+                .body("data.findAll{it.email =~/.*?@reqres.in/}.email.flatten()",
+                        hasItem("eve.holt@reqres.in"));
     }
 
     @Test
@@ -52,9 +57,8 @@ public class ReqresTests {
 
         given()
                 .spec(loginRequestSpec)
-                .basePath("api/users/11")
                 .when()
-                .get()
+                .get("/users/11")
                 .then()
                 .spec(loginResponseSpec)
                 .assertThat()
@@ -67,9 +71,8 @@ public class ReqresTests {
 
         given()
                 .spec(loginRequestSpec)
-                .basePath("api/users/23")
                 .when()
-                .get()
+                .get("/users/23")
                 .then()
                 .log().status()
                 .statusCode(404);
@@ -81,9 +84,8 @@ public class ReqresTests {
 
         given()
                 .spec(loginRequestSpec)
-                .basePath("/api/users/2")
                 .when()
-                .delete()
+                .delete("/users/2")
                 .then()
                 .log().status()
                 .statusCode(204);
@@ -93,16 +95,15 @@ public class ReqresTests {
     @DisplayName("Тест на успешное изменение имени и работы юзера")
     void updateUserNameTest() {
 
-        ChangeUserNamePojoModel body = new ChangeUserNamePojoModel();
+        ChangeUserNameLombokModel body = new ChangeUserNameLombokModel();
         body.setName("morpheus");
         body.setJob("zion resident");
 
         given()
                 .spec(loginRequestSpec)
-                .basePath("/api/users/12")
                 .body(body)
                 .when()
-                .put()
+                .put("/users/12")
                 .then()
                 .spec(loginResponseSpec)
                 .assertThat()
